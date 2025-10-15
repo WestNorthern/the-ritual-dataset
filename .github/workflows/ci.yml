@@ -19,25 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1) Install pnpm first (adds PNPM_HOME to PATH)
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-
-      # 2) Then setup Node and enable pnpm caching
-      - name: Setup Node
+      - name: Setup Node (with pnpm cache)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # 3) (Optional) sanity print
-      - run: pnpm -v
+      - name: Enable Corepack & activate pnpm from package.json
+        run: |
+          corepack enable
+          echo "Using packageManager=$(node -p "require('./package.json').packageManager")"
+          corepack prepare $(node -p "require('./package.json').packageManager") --activate
+          pnpm -v
 
-      # 4) Install & run the monorepo scripts
       - name: Install (workspace)
         run: pnpm install --frozen-lockfile
 
