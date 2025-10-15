@@ -38,6 +38,7 @@ jobs:
         run: |
           docker buildx build \
             --push \
+            --build-arg GIT_SHA=${GITHUB_SHA} \
             --file apps/api/Dockerfile \
             --tag ${{ steps.meta.outputs.tag }} \
             .

@@ -1,6 +1,8 @@
 # --- build ---
 FROM node:20-alpine AS build
 WORKDIR /app
+ARG GIT_SHA=dev
+ENV GIT_SHA=$GIT_SHA
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 # workspace metadata (include lockfile)

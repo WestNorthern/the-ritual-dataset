@@ -1,7 +1,7 @@
+/* eslint-env node */
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 const fastify = Fastify({ logger: true });
 
