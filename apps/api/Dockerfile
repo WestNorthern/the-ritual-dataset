@@ -2,19 +2,32 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
-COPY pnpm-workspace.yaml package.json .npmrc ./
-COPY apps/api/package.json apps/api/tsconfig.json ./apps/api/
-COPY tsconfig.base.json ./
-RUN pnpm install --frozen-lockfile --filter trd-api...
-COPY apps/api/src ./apps/api/src
-RUN pnpm --filter trd-api build
+
+# workspace metadata (include lockfile)
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc tsconfig.base.json ./
+
+# app sources
+COPY apps/api/package.json apps/api/tsconfig.json apps/api/ apps/api/
+
+# install + build only the API
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter ./apps/api... run build
+
+# create prod-only package tree for API
+RUN pnpm --filter ./apps/api... deploy --prod /prod/api
+
 
 # --- run ---
 FROM node:20-alpine AS run
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=production PORT=8080
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
-COPY --from=build /app/apps/api/package.json ./package.json
+
+# bring pruned prod deps (no network install here)
+COPY --from=build /prod/api/package.json ./package.json
+COPY --from=build /prod/api/node_modules ./node_modules
+
+# bring compiled server
 COPY --from=build /app/apps/api/dist ./dist
-RUN pnpm install --prod --frozen-lockfile
+
 CMD ["node", "dist/index.js"]
