@@ -1,0 +1,33 @@
+# fly.toml app configuration file generated for the-ritual-dataset-api on 2025-10-15T10:25:18-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'the-ritual-dataset-api'
+primary_region = 'lax'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[http_service]
+  internal_port = 8080
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 50
+    soft_limit = 25
+
+  [[http_service.checks]]
+    interval = '10s'
+    timeout = '2s'
+    method = 'GET'
+    path = '/health'
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
