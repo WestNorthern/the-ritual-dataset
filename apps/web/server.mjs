@@ -1,25 +1,30 @@
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const fastify = Fastify({ logger: true });
 
-// Health
+// health first
 fastify.get("/health", async () => ({ status: "ok" }));
 
-// Serve built client (we'll copy it to /app/dist/client)
+// serve built client
 const clientDir = path.resolve("dist", "client");
-await fastify.register(fastifyStatic, { root: clientDir, prefix: "/" });
+await fastify.register(fastifyStatic, {
+  root: clientDir,
+  prefix: "/",
+});
 
-// SPA fallback
-fastify.get("/*", (_req, reply) => reply.sendFile("index.html"));
+// SPA fallback *without* declaring GET /* again
+fastify.setNotFoundHandler((req, reply) => {
+  // only fall back for GET HTML requests
+  const accept = String(req.headers.accept || "");
+  if (req.method === "GET" && accept.includes("text/html")) {
+    return reply.sendFile("index.html");
+  }
+  reply.code(404).send({ error: "Not Found" });
+});
 
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
-try {
-  await fastify.listen({ port, host });
-  fastify.log.info(`web listening on http://${host}:${port}`);
-} catch (err) {
-  fastify.log.error(err);
-  process.exit(1);
-}
+await fastify.listen({ port, host });
