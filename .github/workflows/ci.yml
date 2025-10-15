@@ -19,19 +19,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node (with pnpm cache)
+      # no cache here; setup-node only
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Enable Corepack & activate pnpm from package.json
+      # activate pnpm from package.json's "packageManager": "pnpm@9.x"
+      - name: Enable Corepack & activate pnpm
         run: |
           corepack enable
-          echo "Using packageManager=$(node -p "require('./package.json').packageManager")"
-          corepack prepare $(node -p "require('./package.json').packageManager") --activate
+          PM=$(node -p "require('./package.json').packageManager")
+          echo "Using $PM"
+          corepack prepare "$PM" --activate
           pnpm -v
+          which pnpm
+
+      # optional: cache the pnpm store (works only AFTER pnpm exists)
+      - name: Resolve pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install (workspace)
         run: pnpm install --frozen-lockfile
