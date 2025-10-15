@@ -1,45 +1,36 @@
-name: Deploy (Fly.io)
+name: CI
 
 on:
+  pull_request:
   push:
     branches: [main]
-    paths:
-      - 'apps/web/**'
-      - 'apps/api/**'
-      - '.github/workflows/deploy.yml'
 
 jobs:
-  deploy:
+  ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    # Deploy each app independently when its files change
-    strategy:
-      matrix:
-        include:
-          - app: web
-            workdir: apps/web
-            fly_config: apps/web/fly.toml
-          - app: api
-            workdir: apps/api
-            fly_config: apps/api/fly.toml
-
-    # Only run the job for an app if its paths changed in this push
-    if: |
-      (matrix.app == 'web' && contains(github.event.head_commit.message, '') ) || true
-
+    timeout-minutes: 20
     concurrency:
-      group: deploy-${{ matrix.app }}
+      group: ci-${{ github.ref }}
       cancel-in-progress: true
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Setup Node & pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack prepare pnpm@9.0.0 --activate
 
-      - name: Deploy ${{ matrix.app }}
-        working-directory: ${{ matrix.workdir }}
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --remote-only -c ${{ matrix.fly_config }}
+      - name: Install deps (workspace)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r test
+
+      - name: Build (smoke)
+        run: pnpm -r build

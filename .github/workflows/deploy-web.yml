@@ -1,4 +1,5 @@
 name: Deploy Web (Fly.io)
+
 on:
   push:
     branches: [main]
@@ -7,10 +8,12 @@ on:
       - '.github/workflows/deploy-web.yml'
 
 jobs:
-  deploy:
+  deploy-web:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 30
+    concurrency:
+      group: deploy-web
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
@@ -18,4 +21,4 @@ jobs:
         working-directory: apps/web
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only -c apps/web/fly.toml
