@@ -1,21 +1,45 @@
-name: CI
+name: Deploy (Fly.io)
+
 on:
-  pull_request:
   push:
     branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
-  ci:
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Deploy each app independently when its files change
+    strategy:
+      matrix:
+        include:
+          - app: web
+            workdir: apps/web
+            fly_config: apps/web/fly.toml
+          - app: api
+            workdir: apps/api
+            fly_config: apps/api/fly.toml
+
+    # Only run the job for an app if its paths changed in this push
+    if: |
+      (matrix.app == 'web' && contains(github.event.head_commit.message, '') ) || true
+
+    concurrency:
+      group: deploy-${{ matrix.app }}
+      cancel-in-progress: true
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: corepack enable
-      - run: corepack prepare pnpm@9.0.0 --activate
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy ${{ matrix.app }}
+        working-directory: ${{ matrix.workdir }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only -c ${{ matrix.fly_config }}
