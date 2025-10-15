@@ -1,9 +1,9 @@
-app = 'the-ritual-dataset-web'
+app = "the-ritual-dataset-web"
 primary_region = "lax"
 
 [build]
-  dockerfile = "Dockerfile"
-  context = "../.." 
+  dockerfile = "Dockerfile"      
+  context = "../.."   
 
 [http_service]
   internal_port = 8080
