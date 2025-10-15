@@ -8,12 +8,17 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     concurrency:
       group: ci-${{ github.ref }}
       cancel-in-progress: true
+
+    env:
+      CI: true
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,7 +31,7 @@ jobs:
         with:
           version: 9
 
-      - name: Install deps (workspace)
+      - name: Install (workspace)
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
