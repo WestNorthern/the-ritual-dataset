@@ -14,18 +14,17 @@ jobs:
       cancel-in-progress: true
     env:
       CI: true
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # no cache here; setup-node only
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # activate pnpm from package.json's "packageManager": "pnpm@9.x"
       - name: Enable Corepack & activate pnpm
         run: |
           corepack enable
@@ -35,7 +34,6 @@ jobs:
           pnpm -v
           which pnpm
 
-      # optional: cache the pnpm store (works only AFTER pnpm exists)
       - name: Resolve pnpm store path
         id: pnpm-cache-path
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT

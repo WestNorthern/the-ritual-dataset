@@ -8,9 +8,15 @@ export function App() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <span className="text-lg font-black tracking-tight">The Ritual Dataset</span>
           <nav className="hidden gap-6 text-sm text-zinc-600 md:flex">
-            <a className="hover:text-black" href="#">Rituals</a>
-            <a className="hover:text-black" href="#">Sessions</a>
-            <a className="hover:text-black" href="#">Docs</a>
+            <a className="hover:text-black" href="#">
+              Rituals
+            </a>
+            <a className="hover:text-black" href="#">
+              Sessions
+            </a>
+            <a className="hover:text-black" href="#">
+              Docs
+            </a>
           </nav>
         </div>
       </header>
@@ -73,15 +79,21 @@ export function App() {
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-zinc-200 p-6">
             <h3 className="font-semibold">Scripted Steps</h3>
-            <p className="mt-2 text-sm text-zinc-600">Preparation → Invocation → Silence → Closing.</p>
+            <p className="mt-2 text-sm text-zinc-600">
+              Preparation → Invocation → Silence → Closing.
+            </p>
           </div>
           <div className="rounded-2xl border border-zinc-200 p-6">
             <h3 className="font-semibold">Measured Silence</h3>
-            <p className="mt-2 text-sm text-zinc-600">Record audio and capture metadata during a fixed window.</p>
+            <p className="mt-2 text-sm text-zinc-600">
+              Record audio and capture metadata during a fixed window.
+            </p>
           </div>
           <div className="rounded-2xl border border-zinc-200 p-6">
             <h3 className="font-semibold">Survey & Evidence</h3>
-            <p className="mt-2 text-sm text-zinc-600">Store Presence Ratings and notes for aggregate reporting.</p>
+            <p className="mt-2 text-sm text-zinc-600">
+              Store Presence Ratings and notes for aggregate reporting.
+            </p>
           </div>
         </div>
       </section>

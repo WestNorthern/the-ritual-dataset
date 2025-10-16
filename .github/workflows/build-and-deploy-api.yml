@@ -16,11 +16,71 @@ jobs:
       group: deploy-api
       cancel-in-progress: true
 
+    services:
+      pg:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trd
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      # CI-only DB for Prisma sanity checks
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/trd
+      # Needed if any code path reads it during build/tests
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      # App name (override with repo variable if you like)
+      FLY_APP_API: ${{ vars.FLY_APP_API || 'the-ritual-dataset-api' }}
+
     steps:
       - uses: actions/checkout@v4
 
+      # Node & pnpm (Corepack)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare "$(node -p "require('./package.json').packageManager")" --activate
+          pnpm -v
+
+      # (Optional) pnpm cache to speed up install
+      - name: Resolve pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install deps (workspace)
+        run: pnpm install --frozen-lockfile
+
+      # Prisma sanity: generate client + migrate against CI Postgres
+      - name: Prisma generate
+        working-directory: apps/api
+        run: pnpm run prisma:generate
+
+      - name: Migrate CI DB
+        working-directory: apps/api
+        run: pnpm run prisma:migrate
+
+      # Build & push image to Fly registry
       - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@v1
 
       - name: Login to Fly registry
         env:
@@ -29,7 +89,7 @@ jobs:
 
       - name: Compute image tag
         id: meta
-        run: echo "tag=registry.fly.io/${{ vars.FLY_APP_API || 'the-ritual-dataset-api' }}:${GITHUB_SHA}" >> $GITHUB_OUTPUT
+        run: echo "tag=registry.fly.io/${{ env.FLY_APP_API }}:${GITHUB_SHA}" >> $GITHUB_OUTPUT
 
       - name: Enable Buildx
         run: docker buildx create --use
@@ -43,7 +103,8 @@ jobs:
             --tag ${{ steps.meta.outputs.tag }} \
             .
 
+      # Deploy the exact image (migrations should run via Fly release_command)
       - name: Deploy exact image
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --image ${{ steps.meta.outputs.tag }} -a ${{ vars.FLY_APP_API || 'the-ritual-dataset-api' }}
+        run: flyctl deploy --image ${{ steps.meta.outputs.tag }} -a ${{ env.FLY_APP_API }} --strategy immediate

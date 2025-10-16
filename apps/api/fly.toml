@@ -5,6 +5,9 @@ primary_region = "lax"
   dockerfile = "Dockerfile"
   context = "../.."
 
+[deploy]
+  release_command = "pnpm run prisma:deploy"
+
 [http_service]
   internal_port = 8080
   auto_stop_machines = true

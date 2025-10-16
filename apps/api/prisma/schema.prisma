@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// prisma/schema.prisma (snippets)
+model Witness {
+  id        String   @id @default(uuid())
+  alias     String   @unique
+  fullName  String?
+  createdAt DateTime @default(now())
+  identities   AuthIdentity[]
+}
+
+enum AuthProvider {
+  local
+  google
+  github
+  apple
+}
+
+model AuthIdentity {
+  id            String       @id @default(uuid())
+  witnessId     String
+  provider      AuthProvider
+  subject       String
+  createdAt     DateTime     @default(now())
+
+  // local-only
+  email         String?      @db.Citext
+  passwordHash  String?
+  emailVerifiedAt DateTime?
+
+  witness       Witness      @relation(fields: [witnessId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@unique([provider, email]) // ensures one local identity per email
+  @@index([witnessId])
+  @@index([email])
+}
