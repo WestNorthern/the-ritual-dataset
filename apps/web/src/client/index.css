@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* optional global tweaks */
+html, body, #root { height: 100%; }
+body { font-synthesis-weight: none; text-rendering: optimizeLegibility; }
+
+:root {
+  --color-brand: #000000;
+  --color-contrast: #ffffff;
+  --color-volt: #ceff00;
+}
+
+/* Use them with arbitrary values */
+.brand-text { color: var(--color-brand); }
+.brand-accent { background: var(--color-volt); }
+
