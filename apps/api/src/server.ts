@@ -26,17 +26,17 @@ export function buildServer() {
     // allow SSR/no-origin (health checks) and explicit web origin
     origin: (origin, cb) => {
       const allowList = new Set<string | undefined>([
-        undefined,                       // curl/health checks, some server-to-server
+        undefined, // curl/health checks, some server-to-server
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:8080",
-        WEB_ORIGIN,                      // e.g., https://the-ritual-dataset-web.fly.dev
+        WEB_ORIGIN, // e.g., https://the-ritual-dataset-web.fly.dev
       ]);
       cb(null, allowList.has(origin));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["content-type", "authorization", "x-trpc-source"],
-    credentials: true,  // you’re using cookies
+    credentials: true, // you’re using cookies
     maxAge: 86400,
   });
 
