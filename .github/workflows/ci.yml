@@ -76,7 +76,7 @@ jobs:
         run: pnpm -r format:check
 
       - name: Test
-        run: pnpm -r test
+        run: pnpm -r test:ci
 
       - name: Build (smoke)
         run: pnpm -r build
