@@ -20,12 +20,12 @@ export function buildServer() {
   });
 
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is required");
-  app.register(cookie, { hook: 'preHandler' });
+  app.register(cookie, { hook: "preHandler" });
   app.register(jwtPlugin, {
     secret: process.env.JWT_SECRET!,
     cookie: {
-        cookieName: 'trd_session',
-        signed: false,
+      cookieName: "trd_session",
+      signed: false,
     },
   });
 

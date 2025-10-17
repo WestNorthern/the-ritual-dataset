@@ -6,6 +6,6 @@
     "outDir": "dist-types",
     "noEmit": false
   },
-  "include": ["src/trpc/**/*.ts", "src/trpc/**/*.tsx","src/**/*.d.ts", "src/types/**/*.d.ts"],
+  "include": ["src/trpc/**/*.ts", "src/trpc/**/*.tsx", "src/**/*.d.ts", "src/types/**/*.d.ts"],
   "exclude": ["**/*.test.ts", "**/*.test.tsx"]
 }

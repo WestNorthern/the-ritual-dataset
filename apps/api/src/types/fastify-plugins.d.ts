@@ -1,6 +1,6 @@
 // Make sure Fastify has the cookie/jwt decorators during type-only builds
-import '@fastify/cookie';
-import '@fastify/jwt';
+import "@fastify/cookie";
+import "@fastify/jwt";
 
 // If your TS still complains, uncomment the augmentation below
 // to hard-assert the decorator shapes (keeps CI happy).

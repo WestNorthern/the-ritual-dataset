@@ -45,9 +45,9 @@ describe("auth flow", () => {
     }
 
     // Me (no manual cookie handling needed)
-    const me = await agent.get('/trpc/auth.me').expect(200);
+    const me = await agent.get("/trpc/auth.me").expect(200);
     // Useful when debugging:
-    expect(me.body).toHaveProperty('result.data'); // helps catch null vs undefined
+    expect(me.body).toHaveProperty("result.data"); // helps catch null vs undefined
     expect(me.body.result.data).toMatchObject({ alias }); // now should pass
 
     // Logout
