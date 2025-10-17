@@ -31,4 +31,4 @@ COPY --from=build /prod/api/ ./
 EXPOSE 8080
 
 # Run migrations against DATABASE_URL, then start server
-CMD ["pnpm", "start:prod"]
+CMD ["sh", "-lc", "npx --yes prisma@6.17.1 migrate deploy --schema=./prisma/schema.prisma && node dist/index.js"]
