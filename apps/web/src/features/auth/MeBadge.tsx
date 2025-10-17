@@ -1,6 +1,6 @@
 import { trpc } from "../../lib/trpc";
 
-export default function MeBadge() {
+export function MeBadge() {
   const { data, isLoading } = trpc.auth.me.useQuery();
 
   if (isLoading) return <span className="opacity-60">…</span>;

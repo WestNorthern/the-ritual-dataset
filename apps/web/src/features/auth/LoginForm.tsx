@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../../lib/trpc";
 
-export default function LoginForm() {
+export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const login = trpc.auth.loginLocal.useMutation();

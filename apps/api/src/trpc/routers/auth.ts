@@ -1,8 +1,9 @@
 // apps/api/src/trpc/routers/auth.ts
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { Context } from '../context';
-import { prisma } from '../../prisma';
+import type { Context } from '../context.js';
+import { prisma } from '../../prisma.js';
 
 const t = initTRPC.context<Context>().create();
 
@@ -11,26 +12,33 @@ const COOKIE_OPTS = {
   httpOnly: true as const,
   sameSite: 'lax' as const,
   path: '/',
-  secure: false,                  // set true behind HTTPS
-  maxAge: 60 * 60 * 24 * 30,      // 30 days
+  secure: false,              // set to true in production behind HTTPS
+  maxAge: 60 * 60 * 24 * 30,  // 30 days
 };
 
 type JwtPayload = { wid: string };
 
-function signJwt(ctx: Context, payload: JwtPayload) {
-  // Uses the Fastify instance’s signer (sync is fine for short payloads)
-  const signer = (ctx.req.server as any)?.jwt?.sign as ((p: any) => string) | undefined;
-  if (!signer) throw new Error('fastify.jwt.sign not available — is @fastify/jwt registered?');
-  return signer(payload);
+type ReplyWithJwt = FastifyReply & {
+  jwtSign: (payload: object) => Promise<string>;
+};
+
+type RequestWithJwt = FastifyRequest & {
+  jwtVerify: <T = unknown>() => Promise<T>;
+};
+
+async function signJwt(ctx: Context, payload: JwtPayload): Promise<string> {
+  const reply = ctx.reply as ReplyWithJwt;
+  if (typeof reply.jwtSign !== 'function') {
+    throw new Error('jwtSign not available on FastifyReply — is @fastify/jwt registered?');
+  }
+  return reply.jwtSign(payload);
 }
 
-function readJwtFromCookie(ctx: Context): JwtPayload | null {
-  const token = (ctx.req.cookies ?? {})[COOKIE_NAME];
-  if (!token) return null;
+async function readJwt(ctx: Context): Promise<JwtPayload | null> {
+  const req = ctx.req as Partial<RequestWithJwt>;
+  if (typeof req.jwtVerify !== 'function') return null;
   try {
-    const verify = (ctx.req.server as any)?.jwt?.verify as (<T>(t: string) => T) | undefined;
-    if (!verify) return null;
-    return verify<JwtPayload>(token);
+    return await req.jwtVerify<JwtPayload>();
   } catch {
     return null;
   }
@@ -47,13 +55,14 @@ export const authRouter = t.router({
     .mutation(async ({ input, ctx }) => {
       const { email, password, alias, fullName } = input;
 
-      // Upsert-ish flow: if identity exists, just issue cookie and return
+      // If identity already exists, just issue cookie and return
       const existing = await prisma.authIdentity.findUnique({
         where: { provider_email: { provider: 'local', email } },
         select: { witnessId: true },
       });
+
       if (existing) {
-        const token = signJwt(ctx, { wid: existing.witnessId });
+        const token = await signJwt(ctx, { wid: existing.witnessId }); // <-- await
         ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
         return { witnessId: existing.witnessId, already: true as const };
       }
@@ -77,7 +86,7 @@ export const authRouter = t.router({
         select: { id: true },
       });
 
-      const token = signJwt(ctx, { wid: w.id });
+      const token = await signJwt(ctx, { wid: w.id }); // <-- await
       ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
       return { witnessId: w.id };
     }),
@@ -100,13 +109,13 @@ export const authRouter = t.router({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
       }
 
-      const token = signJwt(ctx, { wid: id.witness.id });
+      const token = await signJwt(ctx, { wid: id.witness.id }); // <-- await
       ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
       return { ok: true as const, witnessId: id.witness.id };
     }),
 
   me: t.procedure.query(async ({ ctx }) => {
-    const payload = readJwtFromCookie(ctx);
+    const payload = await readJwt(ctx); // <-- await
     if (!payload) return null;
 
     const w = await prisma.witness.findUnique({

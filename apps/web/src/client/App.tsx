@@ -111,11 +111,11 @@
 //   );
 // }
 
-import MeBadge from "../features/auth/MeBadge";
-import RegisterForm from "../features/auth/RegisterForm";
-import LoginForm from "../features/auth/LoginForm";
+import { MeBadge } from "../features/auth/MeBadge";
+import { RegisterForm } from "../features/auth/RegisterForm";
+import { LoginForm } from "../features/auth/LoginForm";
 
-export default function App() {
+export function App() {
   return (
     <div className="p-6 space-y-6">
       <header className="flex items-center justify-between">

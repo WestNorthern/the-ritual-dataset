@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../../lib/trpc";
 
-export default function RegisterForm() {
+export function RegisterForm() {
   const [alias, setAlias] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
