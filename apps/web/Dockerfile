@@ -15,6 +15,7 @@ COPY apps/web/server.mjs apps/web/server.mjs
 
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
+RUN printf "VITE_API_URL=%s\n" "$VITE_API_URL" > apps/web/.env.production
 
 # Install workspace deps (lockfile-resolved), then build just the web app
 RUN pnpm install --frozen-lockfile
