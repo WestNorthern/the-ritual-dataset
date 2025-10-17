@@ -7,7 +7,7 @@
     "types": ["vite/client", "node", "@fastify/cookie", "@fastify/jwt"],
     "baseUrl": ".",
     "paths": {
-      "@api/*": ["../api/dist-types/*", "../api/src/*"] 
+      "@api/*": ["../api/dist-types/*", "../api/src/*"]
     }
   },
   "include": ["src", "vite.config.ts", "index.html", "server.mjs"]

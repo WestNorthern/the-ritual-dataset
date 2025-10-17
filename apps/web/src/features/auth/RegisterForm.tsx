@@ -70,7 +70,11 @@ export function RegisterForm({ next = "/app" }: RegisterFormProps) {
         {register.isPending ? "Creating…" : "Create account"}
       </button>
 
-      {register.error && <p className="text-red-600 text-sm" role="alert">{register.error.message}</p>}
+      {register.error && (
+        <p className="text-red-600 text-sm" role="alert">
+          {register.error.message}
+        </p>
+      )}
     </form>
   );
 }
