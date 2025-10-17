@@ -25,10 +25,15 @@ FROM node:20-alpine AS run
 WORKDIR /app
 ENV NODE_ENV=production PORT=8080
 
-# copy the pruned app
+# Optional but recommended for Prisma engines on Alpine
+RUN apk add --no-cache libc6-compat
+
+# Install Prisma CLI globally so we don't "npx" at runtime
+RUN npm i -g prisma@6.17.1
+
+# Bring pruned app (already has generated client in node_modules)
 COPY --from=build /prod/api/ ./
 
 EXPOSE 8080
-
-# Run migrations against DATABASE_URL, then start server
-CMD ["sh", "-lc", "npx --yes prisma@6.17.1 migrate deploy --schema=./prisma/schema.prisma && node dist/index.js"]
+# Run migrations against $DATABASE_URL (from Fly secrets), then start
+CMD ["sh", "-lc", "prisma migrate deploy --schema=./prisma/schema.prisma && node dist/index.js"]
