@@ -1,6 +1,9 @@
 app = "the-ritual-dataset-web"
 primary_region = "lax"
 
+[build.args]
+  VITE_API_URL = "https://the-ritual-dataset-api.fly.dev"
+
 [build]
   dockerfile = "Dockerfile"      
   context = "../.."   

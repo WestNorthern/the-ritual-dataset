@@ -13,6 +13,9 @@ COPY apps/web/package.json apps/web/tsconfig.json apps/web/vite.config.ts apps/w
 COPY apps/web/src apps/web/src
 COPY apps/web/server.mjs apps/web/server.mjs
 
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Install workspace deps (lockfile-resolved), then build just the web app
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter ./apps/web... run build
