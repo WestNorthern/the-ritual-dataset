@@ -1,20 +1,11 @@
-// apps/api/src/trpc/routers/auth.ts
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { z } from "zod";
 import type { Context } from "../context.js";
 import { prisma } from "../../prisma.js";
+import { setSessionCookie, clearSessionCookie } from "../../utils/cookies.js";
 
 const t = initTRPC.context<Context>().create();
-
-const COOKIE_NAME = "trd_session";
-const COOKIE_OPTS = {
-  httpOnly: true as const,
-  sameSite: "lax" as const,
-  path: "/",
-  secure: false, // set to true in production behind HTTPS
-  maxAge: 60 * 60 * 24 * 30, // 30 days
-};
 
 type JwtPayload = { wid: string };
 
@@ -64,8 +55,8 @@ export const authRouter = t.router({
       });
 
       if (existing) {
-        const token = await signJwt(ctx, { wid: existing.witnessId }); // <-- await
-        ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
+        const token = await signJwt(ctx, { wid: existing.witnessId });
+        setSessionCookie(ctx.reply, token);
         return { witnessId: existing.witnessId, already: true as const };
       }
 
@@ -88,8 +79,8 @@ export const authRouter = t.router({
         select: { id: true },
       });
 
-      const token = await signJwt(ctx, { wid: w.id }); // <-- await
-      ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
+      const token = await signJwt(ctx, { wid: w.id });
+      setSessionCookie(ctx.reply, token);
       return { witnessId: w.id };
     }),
 
@@ -111,13 +102,13 @@ export const authRouter = t.router({
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
       }
 
-      const token = await signJwt(ctx, { wid: id.witness.id }); // <-- await
-      ctx.reply.setCookie(COOKIE_NAME, token, COOKIE_OPTS);
+      const token = await signJwt(ctx, { wid: id.witness.id });
+      setSessionCookie(ctx.reply, token);
       return { ok: true as const, witnessId: id.witness.id };
     }),
 
   me: t.procedure.query(async ({ ctx }) => {
-    const payload = await readJwt(ctx); // <-- await
+    const payload = await readJwt(ctx);
     if (!payload) return null;
 
     const w = await prisma.witness.findUnique({
@@ -130,7 +121,7 @@ export const authRouter = t.router({
   }),
 
   logout: t.procedure.mutation(async ({ ctx }) => {
-    ctx.reply.clearCookie(COOKIE_NAME, { path: "/" });
+    clearSessionCookie(ctx.reply);
     return { ok: true as const };
   }),
 });
