@@ -20,7 +20,9 @@
     "prisma:studio": "prisma studio",
     "pretypecheck": "pnpm run prisma:generate",
     "prebuild": "pnpm run prisma:generate",
-    "pretest": "pnpm run prisma:generate"
+    "pretest": "pnpm run prisma:generate",
+    "start:prod": "pnpm dlx prisma@6.17.1 migrate deploy --schema=./prisma/schema.prisma && node dist/index.js",
+
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
