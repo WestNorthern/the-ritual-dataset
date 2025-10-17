@@ -30,6 +30,7 @@ export function buildServer() {
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:8080",
+        "http://localhost:3001",
         WEB_ORIGIN, // e.g., https://the-ritual-dataset-web.fly.dev
       ]);
       cb(null, allowList.has(origin));

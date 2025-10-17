@@ -1,17 +1,16 @@
 import { buildServer } from "./server.js";
 
+const PORT = Number(process.env.PORT ?? 3001); // <-- dev default 3001
+const HOST = process.env.HOST ?? "0.0.0.0";
+
 const app = buildServer();
-const port = Number(process.env.PORT ?? 8080);
-const host = process.env.HOST ?? "0.0.0.0";
 
 app
-  .listen({ port, host })
-  .then(async () => {
-    app.log.info(`BOOT: api listening on http://${host}:${port}`);
-    await app.ready();
-    app.log.info("\n" + app.printRoutes());
+  .listen({ port: PORT, host: HOST })
+  .then(() => {
+    app.log.info(`API listening on http://${HOST}:${PORT}`);
   })
   .catch((err) => {
-    app.log.error(err);
+    app.log.error(err, "Failed to start server");
     process.exit(1);
   });

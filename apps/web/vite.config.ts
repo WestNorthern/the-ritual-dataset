@@ -10,11 +10,16 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/trpc": {
-        target: "http://localhost:3000", // 👈 was 8080 earlier
+        target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
         ws: true,
       },
+    },
+  },
+  resolve: {
+    alias: {
+      "@api": new URL("../api/src", import.meta.url).pathname,
     },
   },
   build: { outDir: "dist/client" },
