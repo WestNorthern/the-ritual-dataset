@@ -1,12 +1,24 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { trpc } from "../../lib/trpc";
+import { sanitizeNext } from "../../lib/next";
 
-export function RegisterForm() {
+type RegisterFormProps = { next?: string };
+
+export function RegisterForm({ next = "/app" }: RegisterFormProps) {
+  const navigate = useNavigate();
+  const utils = trpc.useUtils();
   const [alias, setAlias] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const register = trpc.auth.registerLocal.useMutation();
+
+  const register = trpc.auth.registerLocal.useMutation({
+    onSuccess: async () => {
+      await utils.auth.me.invalidate();
+      navigate(sanitizeNext(next), { replace: true });
+    },
+  });
 
   return (
     <form
@@ -22,6 +34,7 @@ export function RegisterForm() {
         value={alias}
         onChange={(e) => setAlias(e.target.value)}
         required
+        autoComplete="username"
       />
       <input
         className="border p-2 rounded"
@@ -36,6 +49,7 @@ export function RegisterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
+        autoComplete="email"
       />
       <input
         className="border p-2 rounded"
@@ -44,15 +58,19 @@ export function RegisterForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
+        minLength={12}
+        autoComplete="new-password"
       />
       <button
+        type="submit"
         className="p-2 rounded bg-black text-white disabled:opacity-50"
         disabled={register.isPending}
+        aria-busy={register.isPending}
       >
-        Create account
+        {register.isPending ? "Creating…" : "Create account"}
       </button>
-      {register.error && <p className="text-red-600 text-sm">{register.error.message}</p>}
-      {register.isSuccess && <p className="text-green-700 text-sm">Account created!</p>}
+
+      {register.error && <p className="text-red-600 text-sm" role="alert">{register.error.message}</p>}
     </form>
   );
 }

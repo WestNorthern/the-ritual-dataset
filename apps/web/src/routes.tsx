@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { AppHome } from "./pages/AppHome.js";
+import { AppHome } from "./pages/AppHome";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -17,3 +17,4 @@ export const router = createBrowserRouter([
     ),
   },
 ]);
+

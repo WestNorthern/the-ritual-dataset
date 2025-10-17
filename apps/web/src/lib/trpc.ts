@@ -1,6 +1,6 @@
 import { createTRPCReact } from "@trpc/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
-import type { AppRouter } from "@api/trpc/root"; // path alias must be set in tsconfig/vite
+import type { AppRouter } from "@api/trpc/root";
 
 export const trpc = createTRPCReact<AppRouter>();
 
