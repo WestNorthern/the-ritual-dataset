@@ -5,6 +5,9 @@ primary_region = "lax"
   dockerfile = "Dockerfile"
   context = "../.."
 
+[build.args]
+  VITE_API_URL = "https://the-ritual-dataset-api.fly.dev"
+
 [deploy]
   release_command = "pnpm run prisma:deploy"
 

@@ -6,6 +6,9 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc tsconfig.base.json ./
 COPY apps/api/package.json apps/api/tsconfig.json apps/api/ apps/api/
 
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter ./apps/api run build
 
