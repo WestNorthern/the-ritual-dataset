@@ -19,8 +19,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm --filter ./apps/web... run build
 
 # Create a prod-only package tree for the web app (no dev deps)
-# This outputs a self-contained package.json + node_modules to /prod/web
-RUN pnpm --filter ./apps/web... deploy --prod /prod/web
+RUN pnpm --filter ./apps/web... exec vite build
 
 
 # --- run: minimal image with prod deps only ---
