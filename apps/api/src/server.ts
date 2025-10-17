@@ -6,8 +6,8 @@ import rateLimit from "@fastify/rate-limit";
 import cors from "@fastify/cors";
 import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 
-import { appRouter } from "./trpc/root";
-import { createContext } from "./trpc/context";
+import { appRouter } from "./trpc/root.js";
+import { createContext } from "./trpc/context.js";
 
 export function buildServer() {
   const app = Fastify({ logger: true });

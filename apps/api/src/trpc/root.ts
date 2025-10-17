@@ -1,6 +1,6 @@
 import { initTRPC } from "@trpc/server";
-import type { Context } from "./context";
-import { authRouter } from "./routers/auth";
+import type { Context } from "./context.js";
+import { authRouter } from "./routers/auth.js";
 
 const t = initTRPC.context<Context>().create();
 

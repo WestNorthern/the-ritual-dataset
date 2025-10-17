@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, describe, it, expect } from "vitest";
 import request from "supertest";
-import { buildServer } from "./server";
+import { buildServer } from "./server.js";
 
 let app: Awaited<ReturnType<typeof buildServer>>;
 
