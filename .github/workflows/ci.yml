@@ -49,8 +49,25 @@ jobs:
       - name: Install (workspace)
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm -r typecheck
+      # 1) Ensure Prisma client is generated once in the workspace (for API typecheck)
+      - name: Prisma generate (API)
+        working-directory: apps/api
+        run: pnpm run prisma:generate
+
+      # 2) Build API .d.ts for the web to consume
+      - name: Build API types
+        working-directory: apps/api
+        run: pnpm run build:types
+
+      # 3) Typecheck API
+      - name: Typecheck API
+        working-directory: apps/api
+        run: pnpm run typecheck
+
+      # 4) Typecheck Web (now reads ../api/dist-types and won’t pull Prisma)
+      - name: Typecheck Web
+        working-directory: apps/web
+        run: pnpm run typecheck
 
       - name: Lint
         run: pnpm -r lint
