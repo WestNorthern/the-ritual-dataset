@@ -1,18 +1,17 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
+import { buildServer } from "./server.js";
 
-const app = Fastify({ logger: true });
-await app.register(cors, { origin: true });
+const app = buildServer();
+const port = Number(process.env.PORT ?? 3000);
+const host = process.env.HOST ?? "0.0.0.0";
 
-app.get("/health", async () => ({ status: "ok" }));
-
-app.get("/", () => ({
-  service: "the-ritual-dataset-api",
-  status: "ok",
-  sha: process.env.GIT_SHA || process.env.GITHUB_SHA || "dev",
-  now: new Date().toISOString(),
-}));
-
-const port = Number(process.env.PORT || 8080);
-const host = process.env.HOST || "0.0.0.0";
-await app.listen({ port, host });
+app
+  .listen({ port, host })
+  .then(async () => {
+    app.log.info(`BOOT: api listening on http://${host}:${port}`);
+    await app.ready();
+    app.log.info("\n" + app.printRoutes());
+  })
+  .catch((err) => {
+    app.log.error(err);
+    process.exit(1);
+  });

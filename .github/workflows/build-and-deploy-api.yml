@@ -78,6 +78,9 @@ jobs:
         working-directory: apps/api
         run: pnpm run prisma:migrate
 
+      - name: Test
+        run: pnpm -r test
+
       # Build & push image to Fly registry
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@v1
