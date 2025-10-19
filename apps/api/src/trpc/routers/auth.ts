@@ -48,7 +48,6 @@ export const authRouter = t.router({
     .mutation(async ({ input, ctx }) => {
       const { email, password, alias, fullName } = input;
 
-      // If identity already exists, just issue cookie and return
       const existing = await prisma.authIdentity.findUnique({
         where: { provider_email: { provider: "local", email } },
         select: { witnessId: true },
@@ -57,7 +56,15 @@ export const authRouter = t.router({
       if (existing) {
         const token = await signJwt(ctx, { wid: existing.witnessId });
         setSessionCookie(ctx.reply, token);
-        return { witnessId: existing.witnessId, already: true as const };
+        // fetch the witness fields so client can populate cache
+        const w = await prisma.witness.findUnique({
+          where: { id: existing.witnessId },
+          select: { id: true, alias: true, fullName: true },
+        });
+        return {
+          witness: { id: w!.id, alias: w!.alias, fullName: w!.fullName ?? null },
+          already: true as const,
+        };
       }
 
       const bcrypt = await import("bcryptjs");
@@ -76,12 +83,13 @@ export const authRouter = t.router({
             },
           },
         },
-        select: { id: true },
+        select: { id: true, alias: true, fullName: true },
       });
 
       const token = await signJwt(ctx, { wid: w.id });
       setSessionCookie(ctx.reply, token);
-      return { witnessId: w.id };
+
+      return { witness: { id: w.id, alias: w.alias, fullName: w.fullName ?? null } };
     }),
 
   loginLocal: t.procedure
@@ -89,22 +97,22 @@ export const authRouter = t.router({
     .mutation(async ({ input, ctx }) => {
       const id = await prisma.authIdentity.findUnique({
         where: { provider_email: { provider: "local", email: input.email } },
-        include: { witness: { select: { id: true } } },
+        include: { witness: { select: { id: true, alias: true, fullName: true } } },
       });
 
-      if (!id?.passwordHash) {
+      if (!id?.passwordHash)
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
-      }
 
       const bcrypt = await import("bcryptjs");
       const ok = await bcrypt.compare(input.password, id.passwordHash);
-      if (!ok) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
-      }
+      if (!ok) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
 
       const token = await signJwt(ctx, { wid: id.witness.id });
       setSessionCookie(ctx.reply, token);
-      return { ok: true as const, witnessId: id.witness.id };
+
+      // return full witness summary for optimistic cache
+      const { id: wid, alias, fullName } = id.witness;
+      return { ok: true as const, witness: { id: wid, alias, fullName: fullName ?? null } };
     }),
 
   me: t.procedure.query(async ({ ctx }) => {

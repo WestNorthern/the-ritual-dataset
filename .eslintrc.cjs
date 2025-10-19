@@ -64,7 +64,10 @@ module.exports = {
       plugins: ["react"],
       extends: ["plugin:react/recommended", "plugin:react/jsx-runtime"],
       settings: { react: { version: "detect" } },
-      rules: {},
+      rules: {
+        "react/prop-types": "off",      
+        "react/react-in-jsx-scope": "off"
+      },
     },
 
     // API + Domain: ensure Node env and no React requirements

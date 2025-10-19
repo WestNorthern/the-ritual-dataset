@@ -12,9 +12,9 @@ export function LoginForm({ next = "/app" }: LoginFormProps) {
   const [password, setPassword] = useState("");
 
   const login = trpc.auth.loginLocal.useMutation({
-    onSuccess: async () => {
-      // mark me as stale so ProtectedRoute/App re-fetch sees the cookie session
-      await utils.auth.me.invalidate();
+    onSuccess: (data) => {
+      utils.auth.me.setData(undefined, data.witness); // accurate alias/fullName
+      utils.auth.me.invalidate();
       navigate(sanitizeNext(next), { replace: true });
     },
   });

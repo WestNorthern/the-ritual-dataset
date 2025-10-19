@@ -14,8 +14,9 @@ export function RegisterForm({ next = "/app" }: RegisterFormProps) {
   const [password, setPassword] = useState("");
 
   const register = trpc.auth.registerLocal.useMutation({
-    onSuccess: async () => {
-      await utils.auth.me.invalidate();
+    onSuccess: (data) => {
+      utils.auth.me.setData(undefined, data.witness);
+      utils.auth.me.invalidate();
       navigate(sanitizeNext(next), { replace: true });
     },
   });
