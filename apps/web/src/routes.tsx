@@ -5,8 +5,9 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { AppHome } from "./pages/AppHome";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { LandingPage } from "./pages/LandingPage";
-// import { DashboardPage } from "./pages/DashboardPage";
-// import { ProfilePage } from "./pages/ProfilePage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { RitualStart } from "./pages/RitualStart";
+import { SessionRunner } from "./pages/SessionRunner";
 
 export const router = createBrowserRouter([
   // PUBLIC layout at "/"
@@ -33,9 +34,9 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <div>Dashboard</div> }, // or <DashboardPage />
-      // { path: "profile", element: <ProfilePage /> }, // -> "/app/profile"
-      // { path: "rituals", element: <RitualsPage /> }, // -> "/app/rituals"
+      { index: true, element: <DashboardPage /> },
+      { path: "rituals/start", element: <RitualStart /> },
+      { path: "run/:sessionId", element: <SessionRunner /> },
     ],
   },
 ]);

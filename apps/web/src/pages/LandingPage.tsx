@@ -1,4 +1,14 @@
+// apps/web/src/pages/LandingPage.tsx
+import { Link } from "react-router-dom";
+import { useAuth } from "../features/auth/useAuth"; // whatever hook you use
+import { sanitizeNext } from "../lib/next";
+
 export function LandingPage() {
+  const { me /*, isLoading */ } = useAuth();
+
+  const next = sanitizeNext("/app/rituals/start");
+  const startTo = me ? next : `/login?next=${encodeURIComponent(next)}`;
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-neutral-950 text-neutral-100 text-center">
       <div className="space-y-6 max-w-lg px-4">
@@ -8,18 +18,21 @@ export function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <a
-            href="/rituals"
+          <Link
+            to={startTo}
             className="px-6 py-3 bg-rose-600 hover:bg-rose-500 transition rounded-lg font-medium"
+            replace
           >
             Perform a Ritual
-          </a>
-          <a
-            href="/research"
+          </Link>
+
+          <Link
+            to="/research"
             className="px-6 py-3 border border-neutral-700 hover:border-neutral-500 transition rounded-lg font-medium"
+            replace
           >
             View the Data
-          </a>
+          </Link>
         </div>
 
         <footer className="text-xs text-neutral-600 pt-10">

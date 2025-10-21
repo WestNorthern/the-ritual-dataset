@@ -1,6 +1,16 @@
-export function sanitizeNext(n: string | undefined | null, fallback = "/app") {
-  if (!n) return fallback;
-  if (n.startsWith("http://") || n.startsWith("https://")) return fallback; // disallow off-site
-  if (!n.startsWith("/")) return fallback; // must be site-relative
-  return n;
+export function sanitizeNext(raw: string, fallback = "/app"): string {
+  try {
+    const decoded = decodeURIComponent(raw ?? "");
+    const s = decoded.trim();
+
+    // must start with exactly one slash
+    if (!s.startsWith("/") || s.startsWith("//")) return fallback;
+
+    // disallow explicit schemes like http:, https:, javascript:, etc.
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(s)) return fallback;
+
+    return s;
+  } catch {
+    return fallback;
+  }
 }
