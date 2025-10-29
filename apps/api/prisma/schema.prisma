@@ -58,11 +58,14 @@ enum RitualStepKind {
 }
 
 model Ritual {
-  id       String       @id @default(cuid())
-  slug     String       @unique
-  name     String
-  steps    RitualStep[] @relation("RitualSteps")
-  sessions Session[]    @relation("RitualSessions")
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  purposeMd    String?  // markdown for "guide"
+  historyMd    String?  // markdown for "history"
+  requirements String[] // stays plain list
+  steps        RitualStep[]
+  sessions     Session[]
 }
 
 model RitualStep {

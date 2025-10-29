@@ -49,7 +49,7 @@ export function NavBar({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 transition-transform duration-300 will-change-transform">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Brand + primary links */}
         <div className="flex items-center gap-3">

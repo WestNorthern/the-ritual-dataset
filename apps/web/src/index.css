@@ -24,3 +24,16 @@ body {
 .brand-accent {
   background: var(--color-volt);
 }
+
+/* --- Immersive mode (enabled by adding 'immersive' to <html>) --- */
+
+html.immersive,
+html.immersive body { background: #000; }
+
+html.immersive .app-shell { background: #000; }
+html.immersive .app-main { max-width: none; padding: 0; }
+
+html.immersive header {
+  transform: translateY(-100%);
+}
+

@@ -14,8 +14,19 @@ export async function seedRituals(prismaArg?: PrismaClient) {
       // 1) Bloody Mary
       const bm = await tx.ritual.upsert({
         where: { slug: "bloody-mary" },
-        update: { name: "Bloody Mary" },
-        create: { slug: "bloody-mary", name: "Bloody Mary" },
+        update: {
+            name: "Bloody Mary",
+            purpose: "A classic mirror-based calling ritual exploring expectation and presence.",
+            history: "Originating in 19th–20th century folklore... (longer copy here).",
+            requirements: ["Mirror", "Dim light or candle", "Quiet room", "Timer/phone"],
+        },
+        create: {
+            slug: "bloody-mary",
+            name: "Bloody Mary",
+            purpose: "A classic mirror-based calling ritual exploring expectation and presence.",
+            history: "Originating in 19th–20th century folklore... (longer copy here).",
+            requirements: ["Mirror", "Dim light or candle", "Quiet room", "Timer/phone"],
+        },
         select: { id: true },
       });
 
