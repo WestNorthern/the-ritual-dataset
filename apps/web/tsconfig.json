@@ -10,5 +10,5 @@
       "@api/*": ["../api/dist-types/*", "../api/src/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "index.html", "server.mjs"]
+  "include": ["src", "vite.config.ts", "index.html", "server.mjs", "tailwind.config.ts"]
 }

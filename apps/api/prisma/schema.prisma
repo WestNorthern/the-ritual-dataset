@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -43,7 +41,7 @@ model AuthIdentity {
   witness Witness @relation(fields: [witnessId], references: [id], onDelete: Cascade)
 
   @@unique([provider, subject])
-  @@unique([provider, email]) // ensures one local identity per email
+  @@unique([provider, email])
   @@index([witnessId])
   @@index([email])
 }
@@ -64,15 +62,17 @@ model Ritual {
   purposeMd    String?  // markdown for "guide"
   historyMd    String?  // markdown for "history"
   requirements String[] // stays plain list
-  steps        RitualStep[]
-  sessions     Session[]
+
+  // Relations
+  steps        RitualStep[] @relation("RitualSteps")
+  sessions     Session[]    @relation("RitualSessions")
 }
 
 model RitualStep {
   id       String @id @default(cuid())
   ritualId String
 
-  ritual Ritual @relation(name: "RitualSteps", fields: [ritualId], references: [id], onDelete: Cascade)
+  ritual Ritual @relation("RitualSteps", fields: [ritualId], references: [id], onDelete: Cascade)
 
   kind  RitualStepKind
   order Int
@@ -80,8 +80,8 @@ model RitualStep {
   title     String?
   videoUrl  String
   posterUrl String?
-  autoNext  Boolean @default(true) // advance when video ends
-  record    Boolean @default(false) // true only for SILENCE
+  autoNext  Boolean @default(true)
+  record    Boolean @default(false)
 
   @@unique([ritualId, order])
   @@index([ritualId, order])
@@ -99,10 +99,10 @@ model Session {
   id String @id @default(cuid())
 
   ritualId String
-  ritual   Ritual @relation(name: "RitualSessions", fields: [ritualId], references: [id], onDelete: Restrict)
+  ritual   Ritual @relation("RitualSessions", fields: [ritualId], references: [id], onDelete: Restrict)
 
   witnessId String?
-  witness   Witness? @relation(name: "WitnessSessions", fields: [witnessId], references: [id], onDelete: SetNull)
+  witness   Witness? @relation("WitnessSessions", fields: [witnessId], references: [id], onDelete: SetNull)
 
   status    SessionStatus @default(RUNNING)
   createdAt DateTime      @default(now())

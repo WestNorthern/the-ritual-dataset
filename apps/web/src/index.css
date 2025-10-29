@@ -1,39 +1,33 @@
 @import "tailwindcss";
 
-/* optional global tweaks */
-html,
-body,
-#root {
+html, body, #root {
   height: 100%;
 }
+
 body {
   font-synthesis-weight: none;
   text-rendering: optimizeLegibility;
+  background: #ffffff;
+  color: #000000;
+  transition: background-color 0.7s, color 0.7s;
 }
 
+/* brand colors (optional accent) */
 :root {
   --color-brand: #000000;
   --color-contrast: #ffffff;
   --color-volt: #ceff00;
 }
 
-/* Use them with arbitrary values */
-.brand-text {
-  color: var(--color-brand);
+/* utility classes */
+.brand-text   { color: var(--color-brand); }
+.brand-accent { background: var(--color-volt); }
+
+/* immersive mode */
+html.immersive, html.immersive body {
+  background: #000000;
+  color: #ffffff;
 }
-.brand-accent {
-  background: var(--color-volt);
-}
-
-/* --- Immersive mode (enabled by adding 'immersive' to <html>) --- */
-
-html.immersive,
-html.immersive body { background: #000; }
-
 html.immersive .app-shell { background: #000; }
 html.immersive .app-main { max-width: none; padding: 0; }
-
-html.immersive header {
-  transform: translateY(-100%);
-}
-
+html.immersive header { transform: translateY(-100%); }

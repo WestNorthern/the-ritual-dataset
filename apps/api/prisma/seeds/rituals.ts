@@ -1,9 +1,10 @@
+// prisma/seedRituals.ts
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaClient, RitualStepKind } from "@prisma/client";
 
 /**
- * Idempotent ritual seed. If `prismaArg` is not provided, this
- * function will create and dispose its own PrismaClient.
+ * Idempotent ritual seed.  If `prismaArg` is not provided,
+ * this function will create and dispose its own PrismaClient.
  */
 export async function seedRituals(prismaArg?: PrismaClient) {
   const prisma = prismaArg ?? new PrismaClient();
@@ -11,21 +12,62 @@ export async function seedRituals(prismaArg?: PrismaClient) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      // 1) Bloody Mary
+      // 1) Bloody Mary ----------------------------------------------------------
       const bm = await tx.ritual.upsert({
         where: { slug: "bloody-mary" },
         update: {
-            name: "Bloody Mary",
-            purpose: "A classic mirror-based calling ritual exploring expectation and presence.",
-            history: "Originating in 19th–20th century folklore... (longer copy here).",
-            requirements: ["Mirror", "Dim light or candle", "Quiet room", "Timer/phone"],
+          name: "Bloody Mary",
+          purposeMd: `## Purpose
+
+A **mirror-based experiment in presence and suggestion**.  
+This ritual invites the Witness to confront their own reflection under
+controlled conditions of dim light and heightened expectation.
+
+> “When you look long into the mirror, the mirror also looks into you.”`,
+
+          historyMd: `## History
+
+The *Bloody Mary* legend circulates through 19ᵗʰ–20ᵗʰ-century sleep-over
+folklore, often as a dare performed in dark bathrooms.  
+Scholars trace it to older European scrying practices—using reflective
+surfaces to glimpse future lovers or spirits.
+
+**Modern psychology** frames it as a mild form of pareidolia:
+after ~30 seconds, the brain begins to reinterpret its own reflection.
+
+**Folkloric evolution**
+
+- Victorian “Mirror Test” → Romantic divination games  
+- 1960s American teens → “Say her name three times”  
+- Internet era → viral endurance challenge
+
+> The experiment endures because it perfectly mixes *science*, *myth*, and
+the *human need to be startled by ourselves*.`,
+
+          requirements: [
+            "Mirror large enough to see your face",
+            "Dim light or candle",
+            "Quiet room with door that closes",
+            "Timer or phone (30 seconds)",
+          ],
         },
         create: {
-            slug: "bloody-mary",
-            name: "Bloody Mary",
-            purpose: "A classic mirror-based calling ritual exploring expectation and presence.",
-            history: "Originating in 19th–20th century folklore... (longer copy here).",
-            requirements: ["Mirror", "Dim light or candle", "Quiet room", "Timer/phone"],
+          slug: "bloody-mary",
+          name: "Bloody Mary",
+          purposeMd: `## Purpose
+
+A **mirror-based experiment in presence and suggestion**.  
+This ritual invites the Witness to confront their own reflection under
+controlled conditions of dim light and heightened expectation.`,
+          historyMd: `## History
+
+See folklore summary above.`,
+          requirements: [
+            "Mirror large enough to see your face",
+            "Dim light or candle",
+            "Quiet room with door that closes",
+            "Timer or phone (30 seconds)",
+          ],
         },
         select: { id: true },
       });
@@ -66,11 +108,33 @@ export async function seedRituals(prismaArg?: PrismaClient) {
         record: false,
       });
 
-      // 2) Enochian (add more steps as you render videos)
+      // 2) Enochian -------------------------------------------------------------
       const en = await tx.ritual.upsert({
         where: { slug: "enochian" },
-        update: { name: "Enochian Calling" },
-        create: { slug: "enochian", name: "Enochian Calling" },
+        update: {
+          name: "Enochian Calling",
+          purposeMd: `## Purpose
+
+To recreate a fragment of John Dee’s “angelic language” experiment.  
+Participants read phonetic invocations designed to induce rhythmic focus.`,
+          historyMd: `## History
+
+In the late 1500s, **John Dee** and **Edward Kelley** claimed to receive
+a divine language from angels through crystal scrying.  
+Their “Enochian” calls became part of ceremonial magic traditions.`,
+          requirements: ["Quiet space", "Printed or digital script", "Recording device"],
+        },
+        create: {
+          slug: "enochian",
+          name: "Enochian Calling",
+          purposeMd: `## Purpose
+
+To recreate a fragment of John Dee’s “angelic language” experiment.`,
+          historyMd: `## History
+
+Renaissance occult research meets linguistic invention.`,
+          requirements: ["Quiet space", "Printed or digital script", "Recording device"],
+        },
         select: { id: true },
       });
 
@@ -88,6 +152,8 @@ export async function seedRituals(prismaArg?: PrismaClient) {
   }
 }
 
+// helper -----------------------------------------------------------------------
+
 type StepInput = {
   kind: RitualStepKind;
   title?: string | null;
@@ -104,7 +170,7 @@ async function upsertStep(
   s: StepInput
 ) {
   await tx.ritualStep.upsert({
-    where: { ritualId_order: { ritualId, order } }, // requires @@unique([ritualId, order])
+    where: { ritualId_order: { ritualId, order } },
     update: {
       kind: s.kind,
       title: s.title ?? null,

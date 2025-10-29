@@ -1,4 +1,3 @@
-// apps/web/src/components/NavBar.tsx
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc";
@@ -10,11 +9,14 @@ type NavItem = { to: string; label: string };
 export function NavBar({
   items = [
     { to: "/app", label: "Home" },
-    { to: "/app/rituals", label: "Rituals" }, // add/remove as you create routes
+    { to: "/app/rituals", label: "Rituals" },
   ] as NavItem[],
 }) {
   const { me, isLoading } = useAuth();
   const utils = trpc.useUtils();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const logout = trpc.auth.logout.useMutation({
     onSuccess: async () => {
       await utils.auth.me.invalidate();
@@ -22,9 +24,6 @@ export function NavBar({
       navigate(`/login?next=${sanitizeNext(next)}`, { replace: true });
     },
   });
-
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
@@ -49,22 +48,29 @@ export function NavBar({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 transition-transform duration-300 will-change-transform">
+    <header className="sticky top-0 z-40 border-b border-border-light bg-white/90 backdrop-blur transition-transform duration-300 will-change-transform">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Brand + primary links */}
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-base font-semibold tracking-tight">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="text-base font-semibold tracking-tight hover:opacity-80 transition"
+          >
             The Ritual Dataset
           </Link>
+
           <ul className="hidden gap-4 md:flex">
             {items.map((it) => (
               <li key={it.to}>
                 <NavLink
                   to={it.to}
                   className={({ isActive }) =>
-                    `rounded px-2 py-1 text-sm ${
-                      isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
-                    }`
+                    [
+                      "rounded-md px-2 py-1 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-black text-white shadow-subtle"
+                        : "text-gray-700 hover:bg-gray-100",
+                    ].join(" ")
                   }
                 >
                   {it.label}
@@ -84,7 +90,7 @@ export function NavBar({
                 ref={btnRef}
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border px-2 py-1"
+                className="flex items-center gap-2 rounded-full border border-border-light bg-white px-2 py-1 shadow-subtle hover:shadow-strong transition"
                 aria-haspopup="menu"
                 aria-expanded={open}
                 aria-controls="account-menu"
@@ -92,16 +98,17 @@ export function NavBar({
                 <Avatar name={me.fullName ?? me.alias} />
                 <span className="hidden text-sm md:inline">{me.alias}</span>
               </button>
+
               {open && (
                 <div
                   id="account-menu"
                   ref={menuRef}
                   role="menu"
-                  className="absolute right-0 mt-2 w-48 rounded-xl border bg-white p-1 shadow-lg"
+                  className="absolute right-0 mt-2 w-48 rounded-xl border border-border-light bg-white p-1 shadow-strong"
                 >
                   <MenuItem to="/app">Dashboard</MenuItem>
-                  <MenuItem to={`/app/profile`}>Profile</MenuItem>
-                  <div className="my-1 border-t" />
+                  <MenuItem to="/app/profile">Profile</MenuItem>
+                  <div className="my-1 border-t border-border-light" />
                   <button
                     role="menuitem"
                     className="w-full rounded-lg px-3 py-2 text-left text-red-700 hover:bg-red-50 disabled:opacity-50"
@@ -119,7 +126,7 @@ export function NavBar({
                 to={`/login?next=${encodeURIComponent(
                   sanitizeNext(location.pathname + location.search),
                 )}`}
-                className="rounded px-3 py-1 text-sm hover:bg-gray-100"
+                className="rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition"
               >
                 Log in
               </Link>
@@ -127,7 +134,7 @@ export function NavBar({
                 to={`/register?next=${encodeURIComponent(
                   sanitizeNext(location.pathname + location.search),
                 )}`}
-                className="rounded bg-black px-3 py-1 text-sm text-white"
+                className="rounded-md bg-black px-3 py-1 text-sm text-white shadow-strong transition hover:scale-[1.02]"
               >
                 Register
               </Link>
@@ -142,7 +149,7 @@ export function NavBar({
 function Avatar({ name }: { name: string }) {
   const letter = (name?.trim()?.[0] ?? "?").toUpperCase();
   return (
-    <div className="grid h-8 w-8 place-items-center rounded-full bg-gray-900 text-sm font-semibold text-white">
+    <div className="grid h-8 w-8 place-items-center rounded-full bg-black text-sm font-semibold text-white">
       {letter}
     </div>
   );
@@ -150,7 +157,11 @@ function Avatar({ name }: { name: string }) {
 
 function MenuItem({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <Link role="menuitem" to={to} className="block rounded-lg px-3 py-2 text-sm hover:bg-gray-100">
+    <Link
+      role="menuitem"
+      to={to}
+      className="block rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
+    >
       {children}
     </Link>
   );

@@ -134,10 +134,10 @@ export function SessionRunner() {
             </button>
 
             <RitualOverview
-              purpose={ritual?.purpose}
+              purposeMd={ritual?.purposeMd}
+              historyMd={ritual?.historyMd}
               requirements={ritual?.requirements as string[] | undefined}
               steps={steps}
-              history={ritual?.history}
               tab={tab}
               setTab={setTab}
             />
