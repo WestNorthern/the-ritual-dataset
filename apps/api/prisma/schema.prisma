@@ -51,6 +51,7 @@ model AuthIdentity {
 enum RitualStepKind {
   PREPARATION
   INVOCATION
+  EXTRA      // optional additional steps (e.g., guided visualization)
   SILENCE
   CLOSING
 }
@@ -90,9 +91,11 @@ model RitualStep {
 // --- Sessions ------------------------------------------------------------------
 
 enum SessionStatus {
-  RUNNING
-  COMPLETED
-  ABORTED
+  DRAFT       // created but not started
+  IN_PROGRESS // actively running through steps
+  SILENCE     // in the silence/recording phase
+  COMPLETED   // finished successfully
+  CANCELLED   // abandoned by user
 }
 
 model Session {
@@ -104,10 +107,71 @@ model Session {
   witnessId String?
   witness   Witness? @relation("WitnessSessions", fields: [witnessId], references: [id], onDelete: SetNull)
 
-  status    SessionStatus @default(RUNNING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  status           SessionStatus @default(IN_PROGRESS)
+  currentStepOrder Int           @default(0) // index into ritual.steps
+
+  // Relations
+  steps     SessionStep[] @relation("SessionSteps")
+  recording Recording?    @relation("SessionRecording")
+  survey    Survey?       @relation("SessionSurvey")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ritualId])
   @@index([witnessId])
+}
+
+// Tracks completion of each step within a session
+model SessionStep {
+  id String @id @default(cuid())
+
+  sessionId    String
+  session      Session @relation("SessionSteps", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  ritualStepId String
+  order        Int // mirrors ritual step order for easy lookup
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@unique([sessionId, order])
+  @@index([sessionId])
+}
+
+// --- Recordings ----------------------------------------------------------------
+
+model Recording {
+  id String @id @default(cuid())
+
+  sessionId String  @unique
+  session   Session @relation("SessionRecording", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  silenceStepOrder Int    // which step in the ritual was recorded
+  durationSec      Float  // measured actual duration
+  sampleRateHz     Int    // e.g., 48000
+  channels         Int    // 1 = mono, 2 = stereo
+  codec            String // e.g., 'audio/webm;codecs=opus'
+  byteSize         Int    // metadata only (blob lives in storage)
+
+  // For MVP "fake" recordings, we just track metadata
+  // Later: storageKey String? // S3/R2 key for actual audio blob
+
+  silenceDetected Boolean @default(false) // true if environment was quiet enough
+
+  createdAt DateTime @default(now())
+}
+
+// --- Surveys -------------------------------------------------------------------
+
+model Survey {
+  id String @id @default(cuid())
+
+  sessionId String  @unique
+  session   Session @relation("SessionSurvey", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  presenceRating Int     // 0-5 scale
+  notes          String? // optional freeform feedback
+
+  createdAt DateTime @default(now())
 }

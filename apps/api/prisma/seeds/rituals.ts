@@ -72,7 +72,8 @@ See folklore summary above.`,
         select: { id: true },
       });
 
-      await upsertStep(tx, bm.id, 1, {
+      // Steps are 0-indexed to match domain model
+      await upsertStep(tx, bm.id, 0, {
         kind: RitualStepKind.PREPARATION,
         title: "Preparation",
         videoUrl: "/videos/bm/1-prep.mp4",
@@ -81,7 +82,7 @@ See folklore summary above.`,
         record: false,
       });
 
-      await upsertStep(tx, bm.id, 2, {
+      await upsertStep(tx, bm.id, 1, {
         kind: RitualStepKind.INVOCATION,
         title: "Invocation",
         videoUrl: "/videos/bm/2-invocation.mp4",
@@ -90,16 +91,16 @@ See folklore summary above.`,
         record: false,
       });
 
-      await upsertStep(tx, bm.id, 3, {
+      await upsertStep(tx, bm.id, 2, {
         kind: RitualStepKind.SILENCE,
         title: "Silence",
         videoUrl: "/videos/bm/3-silence.mp4",
         posterUrl: "/videos/bm/3-silence.jpg",
-        autoNext: true,
+        autoNext: false, // User must explicitly proceed after silence
         record: true,
       });
 
-      await upsertStep(tx, bm.id, 4, {
+      await upsertStep(tx, bm.id, 3, {
         kind: RitualStepKind.CLOSING,
         title: "Closing",
         videoUrl: "/videos/bm/4-closing.mp4",
@@ -115,34 +116,79 @@ See folklore summary above.`,
           name: "Enochian Calling",
           purposeMd: `## Purpose
 
-To recreate a fragment of John Dee’s “angelic language” experiment.  
-Participants read phonetic invocations designed to induce rhythmic focus.`,
+A **guided calling** inspired by historical Enochian work, focusing on attention, pacing, and silence.
+
+This ritual recreates a fragment of John Dee's "angelic language" experiment.
+Participants follow phonetic invocations designed to induce rhythmic focus and altered perception.
+
+> "The language of angels is not meant to be understood—only spoken."`,
           historyMd: `## History
 
-In the late 1500s, **John Dee** and **Edward Kelley** claimed to receive
-a divine language from angels through crystal scrying.  
-Their “Enochian” calls became part of ceremonial magic traditions.`,
-          requirements: ["Quiet space", "Printed or digital script", "Recording device"],
+In the late 1500s, **John Dee**—court astronomer to Queen Elizabeth I—and **Edward Kelley** claimed to receive a divine language from angels through crystal scrying.
+
+Their "Enochian" calls became foundational to ceremonial magic traditions:
+
+- **1580s**: Dee and Kelley record the "Angelic Keys" in private journals
+- **1800s**: The Golden Dawn incorporates Enochian into Western occultism
+- **1900s**: Aleister Crowley popularizes simplified versions
+- **Today**: Used in experimental contexts for focused attention states
+
+**The linguistic puzzle**: Enochian has consistent grammar and vocabulary, yet defies translation.
+Scholars debate whether it was channeled, invented, or something in between.`,
+          requirements: [
+            "Quiet space free from interruption",
+            "Comfortable seated position",
+            "Headphones (recommended for immersion)",
+            "30 seconds of uninterrupted silence",
+          ],
         },
         create: {
           slug: "enochian",
           name: "Enochian Calling",
           purposeMd: `## Purpose
 
-To recreate a fragment of John Dee’s “angelic language” experiment.`,
+A guided calling inspired by historical Enochian work.`,
           historyMd: `## History
 
 Renaissance occult research meets linguistic invention.`,
-          requirements: ["Quiet space", "Printed or digital script", "Recording device"],
+          requirements: ["Quiet space", "Comfortable seat", "Headphones (recommended)"],
         },
         select: { id: true },
       });
 
-      await upsertStep(tx, en.id, 1, {
+      // Steps are 0-indexed
+      await upsertStep(tx, en.id, 0, {
         kind: RitualStepKind.PREPARATION,
         title: "Preparation",
         videoUrl: "/videos/en/1-prep.mp4",
         posterUrl: "/videos/en/1-prep.jpg",
+        autoNext: true,
+        record: false,
+      });
+
+      await upsertStep(tx, en.id, 1, {
+        kind: RitualStepKind.INVOCATION,
+        title: "The First Key",
+        videoUrl: "/videos/en/2-invocation.mp4",
+        posterUrl: "/videos/en/2-invocation.jpg",
+        autoNext: true,
+        record: false,
+      });
+
+      await upsertStep(tx, en.id, 2, {
+        kind: RitualStepKind.SILENCE,
+        title: "Silence",
+        videoUrl: "/videos/en/3-silence.mp4",
+        posterUrl: "/videos/en/3-silence.jpg",
+        autoNext: false,
+        record: true,
+      });
+
+      await upsertStep(tx, en.id, 3, {
+        kind: RitualStepKind.CLOSING,
+        title: "Return",
+        videoUrl: "/videos/en/4-closing.mp4",
+        posterUrl: "/videos/en/4-closing.jpg",
         autoNext: true,
         record: false,
       });

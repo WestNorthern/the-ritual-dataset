@@ -4,12 +4,12 @@ import { trpc } from "../lib/trpc";
 import { useAuth } from "../features/auth/useAuth";
 import { sanitizeNext } from "../lib/next";
 
-type NavItem = { to: string; label: string };
+type NavItem = { to: string; label: string; end?: boolean };
 
 export function NavBar({
   items = [
-    { to: "/app", label: "Home" },
-    { to: "/app/rituals", label: "Rituals" },
+    { to: "/app", label: "Home", end: true },          // ✅ exact match only
+    { to: "/app/rituals/start", label: "Rituals" },
   ] as NavItem[],
 }) {
   const { me, isLoading } = useAuth();
@@ -25,15 +25,19 @@ export function NavBar({
     },
   });
 
+  // state-driven menu (works for hover + touch)
   const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const hoverTimer = useRef<number | null>(null);
 
+  // outside click / Esc to close
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!open) return;
       const t = e.target as Node;
-      if (menuRef.current?.contains(t) || btnRef.current?.contains(t)) return;
+      if (rootRef.current?.contains(t)) return;
       setOpen(false);
     }
     function onEsc(e: KeyboardEvent) {
@@ -47,8 +51,18 @@ export function NavBar({
     };
   }, [open]);
 
+  // hover helpers (small delay for nicer feel)
+  const openSoon = () => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setOpen(true), 60) as unknown as number;
+  };
+  const closeSoon = () => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setOpen(false), 120) as unknown as number;
+  };
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border-light bg-white/90 backdrop-blur transition-transform duration-300 will-change-transform">
+    <header className="sticky top-0 z-40 border-b border-black/10 bg-white/90 backdrop-blur transition-transform duration-300 will-change-transform">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Brand + primary links */}
         <div className="flex items-center gap-4">
@@ -64,11 +78,12 @@ export function NavBar({
               <li key={it.to}>
                 <NavLink
                   to={it.to}
+                  end={it.end} // ✅ exact match (Home)
                   className={({ isActive }) =>
                     [
-                      "rounded-md px-2 py-1 text-sm font-medium transition-colors",
+                      "rounded-md px-2 py-1 text-sm font-medium transition",
                       isActive
-                        ? "bg-black text-white shadow-subtle"
+                        ? "bg-black text-white shadow-[0_3px_8px_rgba(0,0,0,0.15)]"
                         : "text-gray-700 hover:bg-gray-100",
                     ].join(" ")
                   }
@@ -85,12 +100,17 @@ export function NavBar({
           {isLoading ? (
             <span className="text-sm text-gray-500">Loading…</span>
           ) : me ? (
-            <div className="relative">
+            <div
+              ref={rootRef}
+              className="relative"
+              onMouseEnter={openSoon}
+              onMouseLeave={closeSoon}
+            >
               <button
                 ref={btnRef}
                 type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-border-light bg-white px-2 py-1 shadow-subtle hover:shadow-strong transition"
+                onClick={() => setOpen((v) => !v)} // touch/click toggle
+                className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-2 py-1 shadow-[0_3px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.12)] transition"
                 aria-haspopup="menu"
                 aria-expanded={open}
                 aria-controls="account-menu"
@@ -104,14 +124,19 @@ export function NavBar({
                   id="account-menu"
                   ref={menuRef}
                   role="menu"
-                  className="absolute right-0 mt-2 w-48 rounded-xl border border-border-light bg-white p-1 shadow-strong"
+                  className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-black/10 bg-white p-1 shadow-[0_12px_32px_rgba(0,0,0,0.22)]"
+                  onMouseEnter={openSoon}
+                  onMouseLeave={closeSoon}
                 >
+                  {/* caret (top-center-ish) */}
+                  <div className="pointer-events-none absolute -top-2 right-6 h-2 w-2 rotate-45 border-l border-t border-black/10 bg-white" />
+
                   <MenuItem to="/app">Dashboard</MenuItem>
                   <MenuItem to="/app/profile">Profile</MenuItem>
-                  <div className="my-1 border-t border-border-light" />
+                  <div className="my-1 border-t border-black/10" />
                   <button
                     role="menuitem"
-                    className="w-full rounded-lg px-3 py-2 text-left text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-black hover:bg-gray-100 disabled:opacity-50"
                     onClick={() => logout.mutate()}
                     disabled={logout.isPending}
                   >
@@ -134,7 +159,7 @@ export function NavBar({
                 to={`/register?next=${encodeURIComponent(
                   sanitizeNext(location.pathname + location.search),
                 )}`}
-                className="rounded-md bg-black px-3 py-1 text-sm text-white shadow-strong transition hover:scale-[1.02]"
+                className="rounded-md bg-black px-3 py-1 text-sm text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] transition hover:scale-[1.02]"
               >
                 Register
               </Link>
@@ -157,11 +182,7 @@ function Avatar({ name }: { name: string }) {
 
 function MenuItem({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <Link
-      role="menuitem"
-      to={to}
-      className="block rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
-    >
+    <Link role="menuitem" to={to} className="block rounded-lg px-3 py-2 text-sm hover:bg-gray-100">
       {children}
     </Link>
   );

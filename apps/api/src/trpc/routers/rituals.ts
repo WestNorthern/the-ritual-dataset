@@ -5,40 +5,41 @@ import { prisma } from "../../prisma.js";
 
 const t = initTRPC.create();
 
-/** Temporary, server-side metadata until DB columns exist */
-type RitualMeta = {
-  purpose?: string | null;
-  history?: string | null;
-  requirements?: string[]; // plain strings for easy rendering
-};
+/**
+ * Extract first meaningful paragraph from markdown as a short description.
+ * Skips header-only lines (## Title) and returns the first content paragraph.
+ */
+function extractDescription(md: string | null | undefined): string | null {
+  if (!md) return null;
 
-const META_BY_SLUG: Record<string, RitualMeta> = {
-  "bloody-mary": {
-    purpose: "A mirror-based calling ritual exploring expectation and presence.",
-    history:
-      "Originating in 19–20th century folklore, the 'Bloody Mary' ritual involves chanting before a mirror in dim light to provoke a visual or felt presence.",
-    requirements: ["Mirror", "Dim light or candle", "Quiet room", "Timer/phone"],
-  },
-  enochian: {
-    purpose:
-      "A guided calling inspired by historical Enochian work, focusing on attention, pacing, and silence.",
-    history:
-      "Enochian practice traces to John Dee and Edward Kelley in the late 16th century; this adaptation uses simplified call-and-response.",
-    requirements: ["Quiet space", "Comfortable seat", "Headphones (recommended)"],
-  },
-};
+  const paragraphs = md.split(/\n\n+/);
+  for (const p of paragraphs) {
+    const trimmed = p.trim();
+    // Skip if it's just a header (e.g., "## Purpose")
+    if (/^#+\s*\S+$/.test(trimmed) && !trimmed.includes(" ", trimmed.indexOf(" ") + 1)) {
+      continue;
+    }
+    // Remove leading header marker if present
+    const content = trimmed.replace(/^#+\s*/, "").trim();
+    if (content) return content;
+  }
+  return null;
+}
 
 export const ritualsRouter = t.router({
-  getRunner: t.procedure
+  /** Get a single ritual by slug (for ritual detail/preview) */
+  getBySlug: t.procedure
     .input(z.object({ slug: z.string().min(1) }))
     .query(async ({ input }) => {
-      // Fetch only fields that exist in your current Prisma schema
-      const r = await prisma.ritual.findUnique({
+      const ritual = await prisma.ritual.findUnique({
         where: { slug: input.slug },
         select: {
           id: true,
           slug: true,
           name: true,
+          purposeMd: true,
+          historyMd: true,
+          requirements: true,
           steps: {
             orderBy: { order: "asc" },
             select: {
@@ -54,29 +55,74 @@ export const ritualsRouter = t.router({
           },
         },
       });
-      if (!r) return null;
 
-      const meta = META_BY_SLUG[r.slug] ?? {};
+      if (!ritual) return null;
+
       return {
-        id: r.id,
-        slug: r.slug,
-        name: r.name,
-        steps: r.steps,
-        purpose: meta.purpose ?? null,
-        history: meta.history ?? null,
-        requirements: meta.requirements ?? [],
+        id: ritual.id,
+        slug: ritual.slug,
+        name: ritual.name,
+        purposeMd: ritual.purposeMd,
+        historyMd: ritual.historyMd,
+        requirements: ritual.requirements,
+        steps: ritual.steps,
       };
     }),
 
+  /** Get a single ritual by ID */
+  getById: t.procedure
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ input }) => {
+      const ritual = await prisma.ritual.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          purposeMd: true,
+          historyMd: true,
+          requirements: true,
+          steps: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              kind: true,
+              order: true,
+              title: true,
+              videoUrl: true,
+              posterUrl: true,
+              autoNext: true,
+              record: true,
+            },
+          },
+        },
+      });
+
+      if (!ritual) return null;
+
+      return ritual;
+    }),
+
+  /** List all rituals (for ritual selection) */
   list: t.procedure.query(async () => {
-    return prisma.ritual.findMany({
+    const rituals = await prisma.ritual.findMany({
       orderBy: { name: "asc" },
       select: {
         id: true,
         slug: true,
         name: true,
+        purposeMd: true,
         _count: { select: { steps: true } },
       },
     });
+
+    return rituals.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      // Return first non-header paragraph as short description
+      description: extractDescription(r.purposeMd),
+      stepCount: r._count.steps,
+    }));
   }),
 });
